@@ -1,0 +1,94 @@
+.active-menu-item {
+    font-weight: bold;
+}
+
+.table-header {
+    background-color: #40E0D0;
+}
+
+.column-separator {
+    border-right: 1px solid #e2e8f0;
+}
+
+.header-column-separator {
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.nested-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.nested-header-main {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.nested-header-sub {
+    display: flex;
+    justify-content: space-between;
+}
+
+.nested-header-sub>span {
+    flex: 1;
+    text-align: center;
+}
+
+.nested-header-sub>span:first-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.data-cell {
+    display: flex;
+    justify-content: space-between;
+}
+
+.data-cell>span {
+    flex: 1;
+    text-align: center;
+}
+
+.data-cell>span:first-child {
+    border-right: 1px solid #e2e8f0;
+}
+
+.status-button {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-align: center;
+    width: 80px;
+}
+
+.status-preparing {
+    background-color: #E6F3FF;
+    color: #3498db;
+}
+
+.status-delivered {
+    background-color: #E6FFF3;
+    color: #2ecc71;
+}
+
+.status-rejected {
+    background-color: #FFF3E6;
+    color: #e67e22;
+}
+
+.status-completed {
+    background-color: #F3F3F3;
+    color: #7f8c8d;
+}
+
+.vertical-separator::after {
+    content: "";
+    position: absolute;
+    top: 25%;
+    bottom: 25%;
+    left: 50%;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
