@@ -7,7 +7,7 @@ use App\Http\Controllers\Tenant\LoginController as TenantLoginController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 
 Route::prefix('backend/{tenant}')
-    ->middleware(['web', 'start.session','set.tenant'])  // Middleware to load tenant
+    ->middleware(['web', 'start.session','basic.auth','set.maitainence','set.tenant'])  // Middleware to load tenant
     ->name('tenant.')
     ->group(function () {
 

@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\MaitenanceController;
 
-Route::prefix('backend/admin')->name('admin.')->middleware('set.tenant')->group(function () {
+Route::prefix('backend/admin')->name('admin.')->middleware(['basic.auth','set.tenant'])->group(function () {
 
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('users.login');
     Route::post('login', [AuthController::class, 'login'])->name('users.check_login');

@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\Json\UserJson;
 use App\Http\Controllers\Admin\Json\UserTenentJson;
 use App\Http\Controllers\Admin\Json\MaintainenceJson;
 
-Route::prefix('backend/admin')->name('admin.')->middleware('set.api.tenant')->group(function () {
+Route::prefix('backend/admin')->name('admin.')->middleware(['basic.auth','set.maitainence','set.api.tenant'])->group(function () {
     Route::middleware(['admin.auth'])->group(function () {});
     Route::get('user', [UserJson::class, 'get_all'])->name('users.all');
     Route::post('users', [UserJson::class, 'store'])->name('users.store');

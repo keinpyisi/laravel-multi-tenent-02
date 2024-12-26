@@ -1,11 +1,14 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Middleware\StartSession;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\SetTenantFromPath;
 use App\Http\Middleware\AdminAuthMiddleware;
+use App\Http\Middleware\BasicAuthMiddleware;
 use App\Http\Middleware\SetApiTenantFromPath;
 use App\Http\Middleware\TenentAuthMiddleware;
+use App\Http\Middleware\MaintainenceMiddleware;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -33,11 +36,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
+            'basic.auth' => BasicAuthMiddleware::class,
+            'set.maitainence' => MaintainenceMiddleware::class,
             'set.tenant' => SetTenantFromPath::class,
             'set.api.tenant' => SetApiTenantFromPath::class,
             'admin.auth' => AdminAuthMiddleware::class,
             'tenent.auth' => TenentAuthMiddleware::class,
-            'start.session' => \App\Http\Middleware\StartSession::class,
+            'start.session' => StartSession::class,
 
         ]);
     })
