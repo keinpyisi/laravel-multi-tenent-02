@@ -49,7 +49,7 @@ return [
             'driver' => 'session',
             'provider' => 'tenant_users',
         ],
-        'front_tenants' => [
+        'tenants_front' => [
             'driver' => 'session',
             'provider' => 'front_tenant_users',
         ],

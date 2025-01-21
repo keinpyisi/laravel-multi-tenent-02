@@ -39,36 +39,59 @@ class TenentAuthMiddleware {
             } else {
                 // Tenant routes
                 $tenantSlug = $segments[1];
-                $request->merge(['tenant_name' => $tenantSlug]);
-                $tenant = Tenant::where('domain', $tenantSlug)->first();
-                
+                $request->merge(['tenant_name' => $tenantSlug]);  
+                // Try to restore authentication
+                if (!Auth::guard('tenants')->check()) {
+                    $userId = $session->get('tenant_user_id');
+                    $tenantUser = $session->get('tenant_user');
+
+                    if ($userId && $tenantUser) {
+                        $user = \App\Models\Tenant\Back\User::find($userId);
+                        if ($user) {
+                            Auth::guard('tenants')->login($user);
+                            // log_message('Auth restored', [
+                            //     'user_id' => $userId,
+                            //     'auth_check' => Auth::guard('tenants')->check()
+                            // ]);
+                        }
+                    }
+                }
+
+                if (!Auth::guard('tenants')->check()) {
+                    log_message('Authentication failed', [
+                        'session_data' => $session->all()
+                    ]);
+                    return redirect()->route('tenant.users.login', ['tenant' => $request->route('tenant')]);
+                }
+
+            }
+        }else  if (count($segments) >= 2 && $segments[0] === 'frontend') {
+            // Try to restore authentication
+            if (!Auth::guard('tenants_front')->check()) {
+                $userId = $session->get('front_tenant_user_id');
+                $tenantUser = $session->get('front_tenant_user');
+
+                if ($userId && $tenantUser) {
+                    $user = \App\Models\Tenant\Front\FrontUser::find($userId);
+                    if ($user) {
+                        Auth::guard('tenants_front')->login($user);
+                        // log_message('Auth restored', [
+                        //     'user_id' => $userId,
+                        //     'auth_check' => Auth::guard('tenants')->check()
+                        // ]);
+                    }
+                }
+            }
+
+            if (!Auth::guard('tenants_front')->check()) {
+                log_message('Authentication failed', [
+                    'session_data' => $session->all()
+                ]);
+                return redirect()->route('tenant.front.users.login', ['tenant' => $request->route('tenant')]);
             }
         }
         
-
-         // Try to restore authentication
-         if (!Auth::guard('tenants')->check()) {
-            $userId = $session->get('tenant_user_id');
-            $tenantUser = $session->get('tenant_user');
-
-            if ($userId && $tenantUser) {
-                $user = \App\Models\Tenant\User::find($userId);
-                if ($user) {
-                    Auth::guard('tenants')->login($user);
-                    // log_message('Auth restored', [
-                    //     'user_id' => $userId,
-                    //     'auth_check' => Auth::guard('tenants')->check()
-                    // ]);
-                }
-            }
-        }
-
-        if (!Auth::guard('tenants')->check()) {
-             log_message('Authentication failed', [
-                'session_data' => $session->all()
-            ]);
-            return redirect()->route('tenant.users.login', ['tenant' => $request->route('tenant')]);
-        }
+        
         return $next($request);
     }
 }
