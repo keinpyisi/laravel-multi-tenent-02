@@ -3,65 +3,115 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Carbon\Carbon;
+use Exception;
 use App\Models\Base\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class SetApiTenantFromPath {
     public function handle($request, Closure $next) {
-         // Basic Auth check
-         if (!$request->session()->isStarted()) {
-            $request->session()->start();
-        }
-        $path = $request->path();
-        $segments = explode('/', $path);
-        if (count($segments) >= 2 && $segments[1] === 'backend') {
-            if ($segments[2] === 'admin') {
-                $tenantLogPath = storage_path('logs/admins/');
-                config(['logging.channels.tenant' => [
-                    'driver' => 'daily',
-                    'path' => $tenantLogPath . '/laravel.log',
-                    'level' => 'debug',
-                    'days' => 14, // Keep logs for 14 days
-                ]]);
-                // Admin routes
-                DB::statement("SET search_path TO base_tenants");
+        try {
+          
+            $path = $request->path();
+            $segments = explode('/', $path);
+
+            if (count($segments) >= 3 && $segments[0] === 'backend') {
+                $this->handleBackendRoutes($request, $segments[1]);
             } else {
-                // Tenant routes
-                $tenantSlug = $segments[2];
-                $tenant = Tenant::where('domain', $tenantSlug)->first();
-
-                if ($tenant) {
-                    // Set the tenant in the app container
-                    app()->instance('tenant', $tenant);
-
-                    // Set the database connection to use only the tenant's schema
-                    DB::statement("SET search_path TO {$tenant->database}");
-                    config(['database.connections.tenant.search_path' => $tenant->database]);
-                    DB::purge('tenant');
-                    DB::reconnect('tenant');
-                    // Set custom daily log path for the tenant
-                    $tenantLogPath = storage_path('logs/tenants/' . $tenantSlug);
-                    config(['logging.channels.tenant' => [
-                        'driver' => 'daily',
-                        'path' => $tenantLogPath . '/laravel.log',
-                        'level' => 'debug',
-                        'days' => 14, // Keep logs for 14 days
-                    ]]);
-                } else {
-                    abort(404);
-                }
+                $this->setPublicSchema($request);
             }
+
+            // Authenticate tenant user only if necessary
+            $this->authenticateTenantUser();
+
+            return $next($request);
+        } catch (Exception $ex) {
+            Log::error('Middleware Error: ', ['exception' => $ex]);
+            abort(500, 'Internal Server Error');
+        }
+    }
+
+    private function handleBackendRoutes(Request $request, $tenantSlug) {
+        if ($tenantSlug === 'admin') {
+            $this->setAdminConfig($request);
         } else {
-            // For routes not starting with 'backend', set to public schema
+            $this->setTenantConfig($request, $tenantSlug);
+        }
+    }
+
+    private function setAdminConfig(Request $request) {
+        $request->merge(['tenant_name' => 'admin']);
+
+        // Set the schema only if necessary
+        if (config('database.connections.tenant.search_path') !== 'base_tenants') {
+            DB::statement("SET search_path TO base_tenants");
+        }
+
+        config(['logging.channels.tenant' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/admins/laravel.log'),
+            'level' => 'debug',
+            'days' => 14,
+        ]]);
+    }
+
+    private function setTenantConfig(Request $request, $tenantSlug) {
+        // Cache tenant lookup to reduce DB queries
+        $tenant = Cache::remember("tenant:{$tenantSlug}", now()->addMinutes(10), function () use ($tenantSlug) {
+            return Tenant::where('domain', $tenantSlug)->first(['id', 'database']);
+        });
+
+        if (!$tenant) {
+            abort(404, 'Tenant Not Found');
+        }
+
+        $request->merge(['tenant_name' => $tenantSlug]);
+        app()->instance('tenant', $tenant);
+
+        // Avoid setting the same schema multiple times
+        if (config('database.connections.tenant.search_path') !== $tenant->database) {
+            DB::statement("SET search_path TO '{$tenant->database}'");
+        }
+
+        view()->share('tenant_name', $tenantSlug);
+
+        config([
+            'database.connections.tenant.search_path' => $tenant->database,
+            'auth.guards.tenant.provider' => 'tenants',
+            'logging.channels.tenant' => [
+                'driver' => 'daily',
+                'path' => storage_path("logs/tenants/{$tenantSlug}/laravel.log"),
+                'level' => 'debug',
+                'days' => 14,
+            ],
+        ]);
+    }
+
+    private function setPublicSchema(Request $request) {
+        $request->merge(['tenant_name' => 'admin']);
+
+        // Avoid redundant DB query
+        if (config('database.connections.tenant.search_path') !== 'public') {
             DB::statement("SET search_path TO public");
         }
-        
+    }
 
-        return $next($request);
+    private function authenticateTenantUser() {
+        $userId = session('tenant_user_id');
+
+        if ($userId && !Auth::guard('tenants')->check()) {
+            // Use cache to prevent frequent database lookups
+            $user = Cache::remember("tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
+                return \App\Models\Tenant\User::find($userId, ['id', 'name', 'email']); // Load only required fields
+            });
+
+            if ($user) {
+                Auth::guard('tenants')->login($user);
+                session()->save(); // Ensure session is updated
+            }
+        }
     }
 }

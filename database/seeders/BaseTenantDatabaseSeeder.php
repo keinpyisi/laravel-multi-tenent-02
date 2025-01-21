@@ -12,7 +12,6 @@ class BaseTenantDatabaseSeeder extends Seeder {
     public function run(): void {
         //
         $this->call([
-            MstAuthFuncSeeder::class,
             AdminSeeder::class,
             // Add more seeders as needed
         ]);

@@ -4,13 +4,15 @@ namespace App\Models\Base;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable {
     protected $connection = 'pgsql';
     protected $table = 'base_tenants.users';
-    use Notifiable;
+    use HasFactory, Notifiable,HasRoles;
 
     protected $fillable = [
         'name',

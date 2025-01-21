@@ -36,14 +36,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
+            'start.session' => StartSession::class, // Ensure this is the first middleware
             'basic.auth' => BasicAuthMiddleware::class,
-            'set.maitainence' => MaintainenceMiddleware::class,
             'set.tenant' => SetTenantFromPath::class,
             'set.api.tenant' => SetApiTenantFromPath::class,
             'admin.auth' => AdminAuthMiddleware::class,
             'tenent.auth' => TenentAuthMiddleware::class,
-            'start.session' => StartSession::class,
-
+            'set.maitainence' => MaintainenceMiddleware::class,
         ]);
     })
     ->withMiddleware(function (Middleware $middleware) {
@@ -64,6 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         // ... other service providers ...
         App\Providers\SchemaServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
     ])
     ->create();
 

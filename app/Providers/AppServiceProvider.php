@@ -2,10 +2,16 @@
 
 namespace App\Providers;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Blade;
 use App\Http\Interfaces\OrderInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 use App\Http\Repositories\OrderRepository;
 use App\Console\Commands\LinkTenantStorageCommand;
@@ -26,7 +32,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Carbon::setLocale('ja');
+        $this->configureCommands();
+        $this->configureDates();
+        $this->configureModels();
+        $this->configureVite();
+
         Auth::resolved(function ($auth) {
             $auth->viaRequest('tenants', function ($request) {
                 if ($userId = $request->session()->get('tenant_user_id')) {
@@ -69,5 +79,28 @@ class AppServiceProvider extends ServiceProvider
          Blade::component('tenant.components.footer', 'tenant-footer');
          Blade::component('tenant.components.header', 'tenant-header');
         //
+    }
+
+    private function configureDates(): void
+    {
+        Date::use(CarbonImmutable::class);
+        Carbon::setLocale('ja');
+    }
+    private function configureCommands(): void
+    {
+        DB::prohibitDestructiveCommands(App::isProduction());
+    }
+    private function configureModels(): void
+    {
+        // User::observe(UserObserver::class);
+        Model::shouldBeStrict();
+        Model::unguard();
+    }
+    private function configureVite(): void
+    {
+        if (App::isLocal()) {
+            config(['vite.enabled' => true]);
+        }
+        Vite::useAggressivePrefetching();
     }
 }

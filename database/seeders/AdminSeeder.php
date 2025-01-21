@@ -6,7 +6,6 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Base\User;
 use Illuminate\Database\Seeder;
-use App\Models\Base\MstAuthFunc;
 use Illuminate\Support\Facades\DB;
 
 class AdminSeeder extends Seeder {
