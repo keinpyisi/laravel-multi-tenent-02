@@ -33,13 +33,11 @@ class User extends Authenticatable {
         'password',
         'login_id',
         'tenant_id',
-        'mst_user_auth_id',
         'user_name',
         'update_user_id',
         'theme_color',
         'posting_unit_price',
-        'approval_count',
-        'mst_stores_id'
+        'approval_count'
 
     ];
 

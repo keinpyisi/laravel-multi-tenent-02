@@ -17,7 +17,6 @@ return new class extends Migration {
             $table->string('email')->unique()->nullable();
             $table->string('user_name');
             $table->string('password');
-            $table->foreignIdFor(MstUserAuth::class)->default('0');
             $table->foreignIdFor(Tenant::class)->default('0');
             $table->string('note')->nullable();
             $table->boolean('del_flag')->default(false);
