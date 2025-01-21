@@ -20,12 +20,14 @@ class SetApiTenantFromPath {
 
             if (count($segments) >= 3 && $segments[0] === 'backend') {
                 $this->handleBackendRoutes($request, $segments[1]);
-            } else {
+                $this->authenticateTenantUser();
+            } else if(count($segments) >= 2 && $segments[0] === 'frontend'){
+                $this->handleFrontendRoutes($request, $segments[1]);
+                $this->authenticateFrontTenantUser();
+                $this->authenticateFrontTenantUser();
+            }else {
                 $this->setPublicSchema($request);
             }
-
-            // Authenticate tenant user only if necessary
-            $this->authenticateTenantUser();
 
             return $next($request);
         } catch (Exception $ex) {
@@ -110,6 +112,22 @@ class SetApiTenantFromPath {
 
             if ($user) {
                 Auth::guard('tenants')->login($user);
+                session()->save(); // Ensure session is updated
+            }
+        }
+    }
+
+    private function authenticateFrontTenantUser() {
+        $userId = session('front_tenant_user_id');
+
+        if ($userId && !Auth::guard('tenants_front')->check()) {
+            // Use cache to prevent frequent database lookups
+            $user = Cache::remember("front_tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
+                return \App\Models\Tenant\User::find($userId, ['id', 'name', 'email','login_id']); // Load only required fields
+            });
+
+            if ($user) {
+                Auth::guard('tenants_front')->login($user);
                 session()->save(); // Ensure session is updated
             }
         }

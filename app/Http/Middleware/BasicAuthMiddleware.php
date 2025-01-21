@@ -55,8 +55,8 @@ class BasicAuthMiddleware
             foreach ($lines as $line) {
                 if (empty($line)) continue;
                 // Split the line into username and password hash
-                list($storedUsername, $storedPassword) = explode(':', $line, 2);
-
+                $line = trim($line); // Trim any leading/trailing spaces
+                list($storedUsername, $storedPassword) = explode(':', $line, 2); 
                 // Check if username matches and password matches the hash
                 if ($username === $storedUsername && $this->verifyPassword($password, $storedPassword)) {
                     return true;
@@ -68,15 +68,25 @@ class BasicAuthMiddleware
     }
 
     private function verifyPassword($password, $storedPassword) {
-        // Check if the password matches the stored hash (for htpasswd)
-        // Laravel doesn't have a built-in method for htpasswd hash verification,
-        // so we use an external package or a custom solution to verify the password.
-
-        // For example, use an Apache htpasswd password hash verification method:
-        if (Hash::check($password, $storedPassword)) {
-            return true;
+       
+        // If the stored password is bcrypt (common in htpasswd), verify using Hash::check
+        if (strpos($storedPassword, '$2y$') === 0) {
+            // Bcrypt hash check
+            return Hash::check($password, $storedPassword);
         }
-
-        return false;
+    
+        // If the stored password uses crypt (e.g., $1$ for MD5-based hashing)
+        if (strpos($storedPassword, '$1$') === 0) {
+            // Use crypt function for MD5-based hashes (if you're using it)
+            return crypt($password, $storedPassword) === $storedPassword;
+        }
+    
+        // If the stored password is a plain text password (not hashed)
+        if (empty($storedPassword) || strpos($storedPassword, '$') === false) {
+            return $password === $storedPassword;
+        }
+    
+        return false;  // Default to false for unsupported hash formats
     }
+    
 }

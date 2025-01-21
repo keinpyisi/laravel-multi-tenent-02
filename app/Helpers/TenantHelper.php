@@ -15,6 +15,20 @@ if (!function_exists('tenant_path')) {
     }
 }
 
+if (!function_exists('front_tenant_path')) {
+    /**
+     * Get the path to a tenant-specific directory within storage/app/public.
+     *
+     * @param string $tenantDomain
+     * @param string $path
+     * @return string
+     */
+    function front_tenant_path($tenantDomain, $path = '') {
+        return storage_path('app/public/tenants/' . $tenantDomain . ($path ? '/' . $path : ''));
+    }
+}
+
+
 if (!function_exists('current_tenant')) {
     /**
      * Get the current tenant.

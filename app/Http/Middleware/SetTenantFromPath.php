@@ -28,6 +28,7 @@ class SetTenantFromPath {
                 $this->authenticateTenantUser();
             } else if(count($segments) >= 2 && $segments[0] === 'frontend'){
                 $this->handleFrontendRoutes($request, $segments[1]);
+                $this->authenticateFrontTenantUser();
             }else {
                 $this->setPublicSchema($request);
             }
@@ -120,7 +121,7 @@ class SetTenantFromPath {
         if ($userId && !Auth::guard('tenants')->check()) {
             // Use cache to prevent frequent database lookups
             $user = Cache::remember("tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
-                return \App\Models\Tenant\User::find($userId, ['id', 'name', 'email']); // Load only required fields
+                return \App\Models\Tenant\User::find($userId, ['id', 'user_name', 'email','login_id']); // Load only required fields
             });
 
             if ($user) {
@@ -131,16 +132,16 @@ class SetTenantFromPath {
     }
 
     private function authenticateFrontTenantUser() {
-        $userId = session('tenant_user_id');
+        $userId = session('front_tenant_user_id');
 
-        if ($userId && !Auth::guard('tenants')->check()) {
+        if ($userId && !Auth::guard('tenants_front')->check()) {
             // Use cache to prevent frequent database lookups
             $user = Cache::remember("front_tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
-                return \App\Models\Tenant\User::find($userId, ['id', 'name', 'email']); // Load only required fields
+                return \App\Models\Tenant\User::find($userId, ['id', 'user_name', 'email','login_id']); // Load only required fields
             });
 
             if ($user) {
-                Auth::guard('tenants')->login($user);
+                Auth::guard('tenants_front')->login($user);
                 session()->save(); // Ensure session is updated
             }
         }
