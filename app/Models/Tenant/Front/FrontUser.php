@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Tenant;
+namespace App\Models\Tenant\Front;
 
 use Carbon\Carbon;
 use App\Models\Tenant\Tenant;

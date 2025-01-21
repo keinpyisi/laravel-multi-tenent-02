@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Tenents;
+namespace App\Http\Controllers\Tenents\Back;
 
 use Illuminate\Http\Request;
 use App\Http\Services\OrderService;

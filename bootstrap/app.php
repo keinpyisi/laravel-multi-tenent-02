@@ -20,7 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ],
             // Use native PHP glob to load wildcard routes for web/admin and web/tenants
             glob(__DIR__ . '/../routes/admin/*.php'),
-            glob(__DIR__ . '/../routes/tenents/*.php')
+            glob(__DIR__ . '/../routes/tenents/*.php'),
+            glob(__DIR__ . '/../routes/tenents/Back/*.php'),
+            glob(__DIR__ . '/../routes/tenents/Front/*.php')
         ),
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
@@ -30,7 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ],
             // Manually load wildcard routes for api/admin and api/tenants
             glob(__DIR__ . '/../routes/api/admin/*.php'),
-            glob(__DIR__ . '/../routes/api/tenants/*.php')
+            glob(__DIR__ . '/../routes/api/tenants/*.php'),
+            glob(__DIR__ . '/../routes/api/tenants/Back/*.php'),
+            glob(__DIR__ . '/../routes/api/tenants/Front/*.php'),
         ),
         apiPrefix: 'api',
     )

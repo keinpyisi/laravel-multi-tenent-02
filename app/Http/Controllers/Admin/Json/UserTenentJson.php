@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Json;
 
 
 use Exception;
-use App\Models\Tenant\User;
+use App\Models\Tenant\Back\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +25,7 @@ class UserTenentJson extends Controller {
         try {
 
             DB::statement("SET search_path TO " . $request->tenant);
-            $users = User::with(['tenant:id,client_name'])  // Use 'with' to load the 'updatedBy' relationship
+            $users = User::with(['tenant:id,client_name,database'])  // Use 'with' to load the 'updatedBy' relationship
                 ->select('id', 'login_id', 'user_name', 'tenant_id', 'updated_at');  // Adjust with actual columns you want to retrieve
             // Check if 'data' is provided in the request and search both login_id and user_name
             if ($request->has('data')) {

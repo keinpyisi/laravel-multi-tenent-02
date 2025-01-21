@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Json;
 
 
 use Exception;
-use App\Models\Tenant\User;
+use App\Models\Tenant\Back\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;

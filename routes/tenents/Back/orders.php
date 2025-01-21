@@ -1,11 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Tenents\AuthController;
-use App\Http\Controllers\Tenents\UserController;
-use App\Http\Controllers\Tenents\OrderController;
-use App\Http\Controllers\Tenant\LoginController as TenantLoginController;
-use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenents\Back\AuthController;
+use App\Http\Controllers\Tenents\Back\UserController;
+use App\Http\Controllers\Tenents\Back\OrderController;
 
 Route::prefix('backend/{tenant}')
     ->middleware(['web', 'start.session','basic.auth','set.maitainence','set.tenant'])   // Middleware to load tenant

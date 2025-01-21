@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use App\Models\Base\Tenant;
-use App\Models\Tenant\User;
+use App\Models\Tenant\Back\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

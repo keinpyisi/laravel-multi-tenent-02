@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Tenents;
+namespace App\Http\Controllers\Tenents\Back;
 
 use Exception;
 use App\Models\User;

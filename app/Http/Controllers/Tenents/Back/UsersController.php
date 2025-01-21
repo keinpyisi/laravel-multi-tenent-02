@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Tenents;
+namespace App\Http\Controllers\Tenents\Back;
 
-use App\Models\Tenant\User;
+use App\Models\Tenant\Back\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
-class UserController extends Controller {
+class UsersController extends Controller {
     //
     public function index() {
         $users = User::all();

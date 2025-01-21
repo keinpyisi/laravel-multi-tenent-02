@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Tenents\OrderController;
+use App\Http\Controllers\Tenents\Back\OrderController;
 
 
 Route::prefix('backend/{tenant}')
