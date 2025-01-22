@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Tenents\Back;
 
-use App\Models\Tenant\Back\User;
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +16,7 @@ class UsersController extends Controller {
         log_message('Tenant-specific log started for ' . $users);
         return view('tenant.pages.tenant.index', compact('users'));
     }
-    public function datas() {
+    public function datas(Request $request) {
         // User::create([
         //     'login_id' => 'ascon',
         //     'email' => 'ascon@ascon.co.jp',
@@ -30,7 +30,7 @@ class UsersController extends Controller {
         log_message('Tenant-specific log started for ' . $users);
         // Retrieve the authenticated user's ID from the 'tenants' guard
         $userId = Auth::guard('tenants')->id();
-        dd($userId);
+        dd($request->session());
         dd($users);
     }
 }

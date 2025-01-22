@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenents\Back;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Services\OrderService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -34,6 +35,17 @@ class OrderController extends Controller {
         $orders = $this->orderService->index();
         log_message('Orders Data ' . $orders);
         return view('tenant.pages.orders.index', compact('orders'));
+    }
+
+
+    public function api_index(Request $request) {
+        //
+        $orders = $this->orderService->index();
+        log_message('Orders Data ' . $orders);
+        return json_send(JsonResponse::HTTP_OK, [
+            'message' => 'successful',
+            'data' => $orders,
+        ]);
     }
 
     /**

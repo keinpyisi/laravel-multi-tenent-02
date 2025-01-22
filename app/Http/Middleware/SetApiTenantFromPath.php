@@ -17,12 +17,11 @@ class SetApiTenantFromPath {
           
             $path = $request->path();
             $segments = explode('/', $path);
-
-            if (count($segments) >= 3 && $segments[0] === 'backend') {
-                $this->handleBackendRoutes($request, $segments[1]);
+            if (count($segments) >= 3 && $segments[1] === 'backend') {
+                $this->handleBackendRoutes($request, $segments[2]);
                 $this->authenticateTenantUser();
-            } else if(count($segments) >= 2 && $segments[0] === 'frontend'){
-                $this->handleFrontendRoutes($request, $segments[1]);
+            } else if(count($segments) >= 2 && $segments[1] === 'frontend'){
+                $this->handleFrontendRoutes($request, $segments[2]);
                 $this->authenticateFrontTenantUser();
             }else {
                 $this->setPublicSchema($request);
@@ -38,6 +37,14 @@ class SetApiTenantFromPath {
     private function handleBackendRoutes(Request $request, $tenantSlug) {
         if ($tenantSlug === 'admin') {
             $this->setAdminConfig($request);
+        } else {
+            $this->setTenantConfig($request, $tenantSlug);
+        }
+    }
+
+    private function handleFrontendRoutes(Request $request, $tenantSlug) {
+        if ($tenantSlug === 'admin') {
+            abort(404);
         } else {
             $this->setTenantConfig($request, $tenantSlug);
         }
@@ -64,7 +71,6 @@ class SetApiTenantFromPath {
         $tenant = Cache::remember("tenant:{$tenantSlug}", now()->addMinutes(10), function () use ($tenantSlug) {
             return Tenant::where('domain', $tenantSlug)->first(['id', 'database']);
         });
-
         if (!$tenant) {
             abort(404, 'Tenant Not Found');
         }

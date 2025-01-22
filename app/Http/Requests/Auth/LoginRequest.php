@@ -67,6 +67,8 @@ class LoginRequest extends FormRequest
             $session = $this->session();
             
             // Store authentication data
+            $token = $user->createToken(env('APP_NAME', 'Laravel'))->plainTextToken;
+            $session->put('bearer_token', $token);
             $session->put('tenant_user_id', $user->id);
             $session->put('tenant_auth', true);
             $session->put('tenant_user', $user->only(['id', 'login_id', 'tenant_id']));
@@ -100,6 +102,8 @@ class LoginRequest extends FormRequest
             $session = $this->session();
             
             // Store authentication data
+            $token = $user->createToken(env('APP_NAME', 'Laravel'))->plainTextToken;
+            $session->put('bearer_token', $token);
             $session->put('front_tenant_user_id', $user->id);
             $session->put('front_tenant_auth', true);
             $session->put('front_tenant_user', $user->only(['id', 'login_id', 'tenant_id']));

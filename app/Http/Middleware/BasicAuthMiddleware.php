@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,7 +57,15 @@ class BasicAuthMiddleware
                 if (empty($line)) continue;
                 // Split the line into username and password hash
                 $line = trim($line); // Trim any leading/trailing spaces
-                list($storedUsername, $storedPassword) = explode(':', $line, 2); 
+                //dd(explode(':', $line, 2));
+                if (strpos($line, ':') !== false) {
+                    list($storedUsername, $storedPassword) = explode(':', $line, 2);
+                } else {
+                    // Handle error or log the malformed line
+                    // Example: Log or throw an error if the line format is incorrect
+                    Log::error('Malformed authentication line: ' . $line);
+                    dd($line);
+                } 
                 // Check if username matches and password matches the hash
                 if ($username === $storedUsername && $this->verifyPassword($password, $storedPassword)) {
                     return true;

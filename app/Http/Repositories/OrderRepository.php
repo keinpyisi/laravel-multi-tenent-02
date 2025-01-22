@@ -3,6 +3,7 @@
 namespace App\Http\Repositories;
 
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use App\Http\Controllers\Controller;
 use App\Http\Interfaces\OrderInterface;
 
@@ -12,6 +13,8 @@ class OrderRepository implements OrderInterface {
      */
     public function index() {
         //
+        $back_users = User::paginate(1);
+        return $back_users;
     }
 
     /**

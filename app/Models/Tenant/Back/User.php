@@ -4,6 +4,7 @@ namespace App\Models\Tenant\Back;
 
 use Carbon\Carbon;
 use App\Models\Tenant\Tenant;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable {
-    use HasFactory, Notifiable,HasRoles;
+    use HasFactory, Notifiable,HasRoles,HasApiTokens;
     protected $table = 'users';
     protected $guard = 'tenants';
     // Automatically set update_user_id before updating the record

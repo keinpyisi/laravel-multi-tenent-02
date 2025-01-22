@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Middleware\CheckApiAuth;
 use App\Http\Middleware\StartSession;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\SetTenantFromPath;
@@ -32,9 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ],
             // Manually load wildcard routes for api/admin and api/tenants
             glob(__DIR__ . '/../routes/api/admin/*.php'),
-            glob(__DIR__ . '/../routes/api/tenants/*.php'),
-            glob(__DIR__ . '/../routes/api/tenants/Back/*.php'),
-            glob(__DIR__ . '/../routes/api/tenants/Front/*.php'),
+            glob(__DIR__ . '/../routes/api/tenents/*.php'),
+            glob(__DIR__ . '/../routes/api/tenents/Back/*.php'),
+            glob(__DIR__ . '/../routes/api/tenents/Front/*.php'),
         ),
         apiPrefix: 'api',
     )
@@ -47,6 +48,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth' => AdminAuthMiddleware::class,
             'tenent.auth' => TenentAuthMiddleware::class,
             'set.maitainence' => MaintainenceMiddleware::class,
+            'check.api.auth' => CheckApiAuth::class,
+        ]);
+
+        // Add Sanctum Middleware for API authentication
+        $middleware->group('api', [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
     ->withMiddleware(function (Middleware $middleware) {
@@ -56,6 +65,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if (count($segments) >= 2 && $segments[0] === 'backend') {
                 $tenantSlug = $segments[1];
                 return "/backend/{$tenantSlug}/login";
+            }
+
+            if (count($segments) >= 2 && $segments[0] === 'frontend') {
+                $tenantSlug = $segments[1];
+                return "/frontend/{$tenantSlug}/login";
             }
             // Default redirect for other paths (if necessary)
             return '/'; // Or any other default route

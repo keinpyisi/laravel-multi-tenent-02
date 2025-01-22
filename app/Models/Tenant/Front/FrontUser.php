@@ -4,6 +4,7 @@ namespace App\Models\Tenant\Front;
 
 use Carbon\Carbon;
 use App\Models\Tenant\Tenant;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class FrontUser extends Authenticatable {
-    use HasFactory, Notifiable,HasRoles;
+    use HasFactory, Notifiable,HasRoles,HasApiTokens;
     protected $table = 'front_users';
     protected $guard = 'tenants_front';
     // Automatically set update_user_id before updating the record

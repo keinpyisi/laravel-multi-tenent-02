@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Tenant\Tenant;
-use App\Models\Tenant\MstUserAuth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;

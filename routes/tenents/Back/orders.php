@@ -13,9 +13,16 @@ Route::prefix('backend/{tenant}')
         //public route
         // // Protected routes requiring tenant authentication
         Route::middleware(['tenent.auth'])->group(function () {
-            Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-            Route::get('orders', [OrderController::class, 'create'])->name('orders.create');
-            Route::get('orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-            Route::get('orders/{id}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+
+             // Create a new middleware class instead of inline closure
+             // Resource routes for orders
+             Route::get('orders', [OrderController::class, 'index'])
+                 ->name('orders.index');
+             Route::get('orders/create', [OrderController::class, 'create'])
+                 ->name('orders.create');
+             Route::get('orders/{id}', [OrderController::class, 'show'])
+                 ->name('orders.show');
+             Route::get('orders/{id}/edit', [OrderController::class, 'edit'])
+                 ->name('orders.edit');
         });
     });
