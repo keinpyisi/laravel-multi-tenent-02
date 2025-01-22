@@ -5,7 +5,7 @@ use App\Http\Controllers\Tenents\Front\AuthController;
 
 
 Route::prefix('frontend/{tenant}')
-    ->middleware(['basic.auth','set.maitainence','set.api.tenant'])  // Middleware to load tenant
+    ->middleware(['set.maitainence','set.api.tenant'])  // Middleware to load tenant
     ->name('tenant.')
     ->group(function () {
 

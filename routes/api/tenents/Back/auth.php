@@ -6,7 +6,7 @@ use App\Http\Controllers\Tenents\Back\OrderController;
 
 
 Route::prefix('backend/{tenant}')
-    ->middleware(['basic.auth','set.maitainence','set.api.tenant'])  // Middleware to load tenant
+    ->middleware(['set.maitainence','set.api.tenant'])  // Middleware to load tenant
     ->name('tenant.')
     ->group(function () {
 
