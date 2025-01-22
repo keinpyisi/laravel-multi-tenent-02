@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Json;
 
 
 use Exception;
-use App\Models\Tenant\Back\User;
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -42,8 +42,8 @@ class UserTenentJson extends Controller {
             log_message('Error occurred during user data: ', ['exception' => $ex->getMessage()]);
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
     public function get_one(Request $request, $user_id) {
@@ -58,8 +58,8 @@ class UserTenentJson extends Controller {
             log_message('Error occurred during user data: ', ['exception' => $ex->getMessage()]);
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 

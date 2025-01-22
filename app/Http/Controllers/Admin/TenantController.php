@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use App\Models\Base\Tenant;
-use App\Models\Tenant\Back\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -153,7 +153,7 @@ class TenantController extends Controller {
             DB::statement("SET search_path TO {$data['database']}");
             $this->runTenantMigrations($data['database']);
 
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
 
             DB::commit();
 
@@ -187,7 +187,7 @@ class TenantController extends Controller {
                 'tenant_id' => $tenant->id,
 
             ]);
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
 
             DB::commit();
             $randomPassword = Str::random(8);
@@ -229,14 +229,14 @@ class TenantController extends Controller {
                 'text' => __('lang.error', ['attribute' => $ex->getMessage()]),
             ]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 
 
     public function show(int $id) {
-        DB::statement("SET search_path TO base_tenants");
+        DB::statement("SET search_path TO common");
 
         $r = [
             "id" => $id,
@@ -272,7 +272,7 @@ class TenantController extends Controller {
 
         DB::statement("SET search_path TO {$tenant->database}");
         $users = User::where('tenant_id', $tenant->id)->paginate(100);
-        DB::statement("SET search_path TO base_tenants");
+        DB::statement("SET search_path TO common");
         // Specify the directory to calculate (e.g., storage directory)
         $directory = storage_path();  // You can change this to any directory you want to analyze
 
@@ -399,7 +399,7 @@ class TenantController extends Controller {
             DB::statement("SET search_path TO {$tenant->database}");
             $client_tenant = Client_Tenant::findOrFail($id);
             $client_tenant->update($validatedData);
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             DB::commit();
 
             // Optionally, you can return a response or redirect
@@ -421,8 +421,8 @@ class TenantController extends Controller {
                 'text' => __('lang.error', ['attribute' => $ex->getMessage()]),
             ]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 

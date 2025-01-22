@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Json;
 
 
 use Exception;
-use App\Models\Tenant\Back\User;
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -21,7 +21,7 @@ class UserJson extends Controller {
 
     public function get_all(Request $request) {
         try {
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             $users = BaseUser::with(['updatedBy:id,user_name'])  // Use 'with' to load the 'updatedBy' relationship
                 ->select('id', 'login_id', 'user_name', 'update_user_id', 'updated_at');  // Adjust with actual columns you want to retrieve
             // Check if 'data' is provided in the request and search both login_id and user_name
@@ -39,13 +39,13 @@ class UserJson extends Controller {
             log_message('Error occurred during user data: ', ['exception' => $ex->getMessage()]);
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
     public function get_one($user_id) {
         try {
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             $user = BaseUser::with(['updatedBy:id,user_name'])  // Use 'with' to load the 'updatedBy' relationship
                 ->select('id', 'login_id', 'user_name', 'update_user_id', 'updated_at')  // Adjust with actual columns you want to retrieve
                 ->where('id', $user_id)
@@ -55,8 +55,8 @@ class UserJson extends Controller {
             log_message('Error occurred during user data: ', ['exception' => $ex->getMessage()]);
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 
@@ -72,7 +72,7 @@ class UserJson extends Controller {
                 $errorMessages = $validator->errors()->all();
                 return json_send(JsonResponse::HTTP_OK, $errorMessages, 'error');
             }
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             DB::beginTransaction();
             $data = array_merge($validator->validated(), [
                 'name' => $request->user_name,
@@ -85,8 +85,8 @@ class UserJson extends Controller {
             log_message('Error occurred during user creation: ', ['exception' => $ex->getMessage()]);
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 
@@ -101,7 +101,7 @@ class UserJson extends Controller {
                 $errorMessages = $validator->errors()->all();
                 return json_send(JsonResponse::HTTP_OK, $errorMessages, 'error');
             }
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             DB::beginTransaction();
             $data = array_merge($validator->validated(), [
                 'name' => $request->user_name,
@@ -121,15 +121,15 @@ class UserJson extends Controller {
             DB::rollBack();
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 
 
     public function destroy(Request $request) {
         try {
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             DB::beginTransaction();
             $user = User::destroy($request->ids);
             // Commit the transaction
@@ -142,8 +142,8 @@ class UserJson extends Controller {
             DB::rollBack();
             return json_send(JsonResponse::HTTP_INTERNAL_SERVER_ERROR, ['error' => $ex->getMessage()]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 }

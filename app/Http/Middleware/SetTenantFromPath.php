@@ -62,8 +62,8 @@ class SetTenantFromPath {
         $request->merge(['tenant_name' => 'admin']);
 
         // Set the schema only if necessary
-        if (config('database.connections.tenant.search_path') !== 'base_tenants') {
-            DB::statement("SET search_path TO base_tenants");
+        if (config('database.connections.tenant.search_path') !== 'common') {
+            DB::statement("SET search_path TO common");
         }
 
         config(['logging.channels.tenant' => [
