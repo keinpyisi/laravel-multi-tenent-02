@@ -18,9 +18,11 @@ class BasicAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-         // Basic Auth check
-        if (!$this->checkBasicAuth($request)) {
-            return response('Unauthorized', 401)->header('WWW-Authenticate', 'Basic realm="Restricted Area"');
+        if(env('BASIC_AUTH')==true){
+             // Basic Auth check
+            if (!$this->checkBasicAuth($request)) {
+                return response('Unauthorized', 401)->header('WWW-Authenticate', 'Basic realm="Restricted Area"');
+            }
         }
         return $next($request);
     }

@@ -194,21 +194,24 @@ class TenantController extends Controller {
 
             // Generate a bcrypt hash of the password
             $hashedPassword = password_hash($randomPassword, PASSWORD_BCRYPT);
-            
+
             // Prepare the htpasswd line
             $htpasswdLine = "{$data['database']}:{$hashedPassword}";
-            
+
             // Define the path to the .htpasswd file
             $htpasswdPath = '.htpasswd';
-            
+
             // Check if the file exists
             if (!Storage::disk('tenant')->exists($htpasswdPath)) {
-                // If the file doesn't exist, create it
-                Storage::disk('tenant')->put($htpasswdPath, $htpasswdLine . PHP_EOL);
+                // If the file doesn't exist, create it with the new user data
+                Storage::disk('tenant')->put($htpasswdPath, $htpasswdLine);
             } else {
-                // If the file exists, append the new user data
-                Storage::disk('tenant')->append($htpasswdPath, $htpasswdLine . PHP_EOL);
+                // If the file exists, append the new user data without a blank line
+                $existingContent = Storage::disk('tenant')->get($htpasswdPath);
+                $newContent = trim($existingContent) . PHP_EOL . $htpasswdLine;
+                Storage::disk('tenant')->put($htpasswdPath, $newContent);
             }
+
             
             // Redirect to the tenant's index with success
             return redirect()->route('admin.tenants.index')->with(
@@ -452,7 +455,8 @@ class TenantController extends Controller {
                 Storage::disk('front_tenant')->deleteDirectory($frontTenantLogoPath);
                 log_message("Deleted: storage/app/public/tenants/{$tenantDomain}/logo");
             }
-            
+            // Remove the tenant's .htpasswd line
+            $this->removeHtpasswdLine($tenant->database);
 
             // Drop tenant-specific schema and database
             $this->dropSchema($tenant->database); // Make sure this method exists to handle schema drop
@@ -479,6 +483,40 @@ class TenantController extends Controller {
                 'title' => __('lang.error_title'),
                 'text' => __('lang.error', ['attribute' => $ex->getMessage()]),
             ]);
+        }
+    }
+
+    /**
+     * Remove the line from .htpasswd that starts with the given database
+     *
+     * @param string $database
+     */
+    private function removeHtpasswdLine($database)
+    {
+        $htpasswdPath = '.htpasswd';
+
+        // Check if the .htpasswd file exists
+        if (Storage::disk('tenant')->exists($htpasswdPath)) {
+            // Get the contents of the .htpasswd file
+            $existingContent = Storage::disk('tenant')->get($htpasswdPath);
+
+            // Split the content into lines
+            $lines = explode(PHP_EOL, $existingContent);
+
+            // Filter out the line starting with the database name
+            $lines = array_filter($lines, function ($line) use ($database) {
+                return strpos($line, "{$database}:") !== 0;
+            });
+
+            // Rebuild the file content without the deleted line and without extra blank lines
+            $newContent = implode(PHP_EOL, $lines);
+        // If the content is empty after modification, delete the file
+            if (empty($newContent)) {
+                Storage::disk('tenant')->delete($htpasswdPath);
+            } else {
+                // Write the new content back to the .htpasswd file
+                Storage::disk('tenant')->put($htpasswdPath, $newContent);
+            }
         }
     }
 
