@@ -17,6 +17,11 @@ use App\Http\Requests\Auth\LoginRequest;
 class AuthController extends Controller {
     protected $redirectTo = 'backend/admin/login';
     public function showLoginForm() {
+        if(Auth::guard('web')->check()){
+            return redirect()->intended(route('admin.tenants.index', absolute: false));
+        }
+        // Forget the cookies
+        Auth::guard('web')->logout();
         return view('admin.auth.login');
     }
 
