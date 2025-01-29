@@ -8,7 +8,7 @@ return [
     'expire_on_close' => false,
     'encrypt' => false,
     'files' => storage_path('framework/sessions'),
-    'connection' => env('SESSION_CONNECTION'),
+    'connection' => env('SESSION_CONNECTION','session_pgsql'),
     'table' => 'sessions',
     'store' => env('SESSION_STORE'),
     'lottery' => [2, 100],
@@ -22,4 +22,5 @@ return [
     'http_only' => true,
     'same_site' => 'lax',
     'partitioned' => false,
+
 ];
