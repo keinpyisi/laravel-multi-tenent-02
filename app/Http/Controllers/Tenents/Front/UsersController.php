@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Tenents\Front;
 
-use App\Models\Tenant\Front\FrontUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Tenant\Front\FrontUser;
 
 class UsersController extends Controller {
     //

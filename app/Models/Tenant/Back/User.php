@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Tenant\Tenant;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -50,6 +51,17 @@ class User extends Authenticatable {
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the name of the "remember me" token column.
+     *
+     * @return string|null
+     */
+    public function getRememberTokenName()
+    {
+        return Schema::hasColumn($this->getTable(), 'remember_token') ? 'remember_token' : null;
+    }
+    
     // Mutator to hash password before saving
     public function setPasswordAttribute($value) {
         $this->attributes['password'] = Hash::make($value);

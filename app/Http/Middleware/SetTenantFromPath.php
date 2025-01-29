@@ -33,8 +33,6 @@ class SetTenantFromPath {
                 $this->setPublicSchema($request);
             }
 
-           
-
             return $next($request);
         } catch (Exception $ex) {
             Log::error('Middleware Error: ', ['exception' => $ex]);
@@ -72,6 +70,10 @@ class SetTenantFromPath {
             'level' => 'debug',
             'days' => 14,
         ]]);
+
+        config([
+            'cache.stores.file.path' => storage_path('framework/cache/data'),
+        ]);
     }
 
     private function setTenantConfig(Request $request, $tenantSlug) {
@@ -79,7 +81,7 @@ class SetTenantFromPath {
         $tenant = Cache::remember("tenant:{$tenantSlug}", now()->addMinutes(10), function () use ($tenantSlug) {
             return Tenant::where('domain', $tenantSlug)->first(['id', 'database']);
         });
-
+        
         if (!$tenant) {
             abort(404, 'Tenant Not Found');
         }
@@ -104,6 +106,17 @@ class SetTenantFromPath {
                 'days' => 14,
             ],
         ]);
+
+        $tenantCachePath = storage_path("tenants/{$tenantSlug}/cache");
+        // Ensure the directory exists
+        if (!file_exists($tenantCachePath)) {
+            mkdir($tenantCachePath, 0777, true);
+        }
+
+        // Update the cache configuration dynamically
+        config([
+            'cache.stores.file.path' => $tenantCachePath,
+        ]);
     }
 
     private function setPublicSchema(Request $request) {
@@ -121,7 +134,7 @@ class SetTenantFromPath {
         if ($userId && !Auth::guard('tenants')->check()) {
             // Use cache to prevent frequent database lookups
             $user = Cache::remember("tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
-                return \App\Models\Tenant\Back\User::find($userId, ['id', 'user_name', 'email','login_id']); // Load only required fields
+                return \App\Models\Tenant\Back\User::find($userId, ['id', 'user_name', 'email','login_id','remember_token']); // Load only required fields
             });
 
             if ($user) {
@@ -137,7 +150,7 @@ class SetTenantFromPath {
         if ($userId && !Auth::guard('tenants_front')->check()) {
             // Use cache to prevent frequent database lookups
             $user = Cache::remember("front_tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
-                return \App\Models\Tenant\Front\FrontUser::find($userId, ['id', 'user_name', 'email','login_id']); // Load only required fields
+                return \App\Models\Tenant\Front\FrontUser::find($userId, ['id', 'user_name', 'email','login_id','remember_token']); // Load only required fields
             });
 
             if ($user) {

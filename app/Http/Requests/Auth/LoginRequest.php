@@ -95,7 +95,6 @@ class LoginRequest extends FormRequest
     public function authenticate_front_tenant(): void
     {
         $this->ensureIsNotRateLimited();
-
         if (Auth::guard('tenants_front')->attempt($this->only('login_id', 'password'), $this->boolean('remember'))) {
             $user = Auth::guard('tenants_front')->user();
             
@@ -111,11 +110,11 @@ class LoginRequest extends FormRequest
             // Force save session
             $session->save();
 
-            // log_message('Authentication Success', [
-            //     'session_id' => $session->getId(),
-            //     'user_id' => $user->id,
-            //     'session_data' => $session->all()
-            // ]);
+            log_message('Authentication Success', [
+                'session_id' => $session->getId(),
+                'user_id' => $user->id,
+                'session_data' => $session->all()
+            ]);
 
             RateLimiter::clear($this->throttleKey());
             return;
