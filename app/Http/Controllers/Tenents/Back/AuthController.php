@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller {
     public function showLoginForm(Request $request) {
+        if(Auth::guard('tenants')->check()){
+            return redirect()->intended(route('tenant.client.index', ['tenant' => $request->tenant_name], absolute: false));
+        }
         // Forget the cookies
         Auth::guard('tenants')->logout();
         // $request->session()->regenerate();
