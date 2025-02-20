@@ -1,28 +1,30 @@
 <?php
 
-namespace App\Models\Tenant;
+namespace App\Models\Tenant\Front;
 
 use Carbon\Carbon;
 use App\Models\Tenant\Tenant;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable {
-    use HasFactory, Notifiable,HasRoles;
-    protected $table = 'users';
-    protected $guard = 'tenants';
+class FrontUser extends Authenticatable {
+    use HasFactory, Notifiable,HasRoles,HasApiTokens;
+    protected $table = 'front_users';
+    protected $guard = 'tenants_front';
     // Automatically set update_user_id before updating the record
     public static function boot() {
         parent::boot();
 
         static::updating(function ($user) {
             // Set the update_user_id to the currently authenticated user's ID
-            if (isset(auth('tenants')->user()->id)) {
-                $user->update_user_id = auth('tenants')->user()->id;
+            if (isset(auth('tenants_front')->user()->id)) {
+                $user->update_user_id = auth('tenants_front')->user()->id;
             }
         });
     }
@@ -49,6 +51,16 @@ class User extends Authenticatable {
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+     /**
+     * Get the name of the "remember me" token column.
+     *
+     * @return string|null
+     */
+    public function getRememberTokenName()
+    {
+        return Schema::hasColumn($this->getTable(), 'remember_token') ? 'remember_token' : null;
+    }
     // Mutator to hash password before saving
     public function setPasswordAttribute($value) {
         $this->attributes['password'] = Hash::make($value);

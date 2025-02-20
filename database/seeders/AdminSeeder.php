@@ -17,7 +17,7 @@ class AdminSeeder extends Seeder {
             $data = [
                 ["login_id" => 'developer', "user_name" => 'developer', "name" => 'developer', "password" => 'Eu3JQpJ44AGN'],
             ];
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             DB::beginTransaction();
             foreach ($data as $record) {
                 User::create($record);
@@ -27,8 +27,8 @@ class AdminSeeder extends Seeder {
             log_message('Error occurred during admin seeding: ', ['exception' => $ex->getMessage()]);
             DB::rollBack();
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 }

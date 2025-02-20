@@ -17,11 +17,11 @@ class one_CreateBaseTenantSchema extends Command
         $this->info('Setting up base tenant schema...');
 
         try {
-            // Create the base_tenants schema if it doesn't exist
-            $this->createSchema('base_tenants');
+            // Create the common schema if it doesn't exist
+            $this->createSchema('common');
 
-            // Set the search path to use the base_tenants schema
-            $this->setSearchPath('base_tenants');
+            // Set the search path to use the common schema
+            $this->setSearchPath('common');
 
             // Run migrations
             $this->runMigrations();

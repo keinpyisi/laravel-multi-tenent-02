@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Tenant extends Model {
     protected $connection = 'pgsql';
-    protected $table = 'base_tenants.tenants';
+    protected $table = 'common.tenants';
 
     const DELETED = 1;
     const ACTIVE = 0;

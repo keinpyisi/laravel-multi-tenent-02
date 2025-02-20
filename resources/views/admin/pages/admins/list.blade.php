@@ -32,7 +32,7 @@
                         $tenent->client_name,
                         "<img src='" .
                         route('tenant.logo', ['domain' => $domain, 'file' => $file]) .
-                        "' alt='Logo' class='h-25 w-35 object-cover'>",
+                        "' alt='Logo' class='h-25 w-12 object-cover'>",
                         $tenent->note,
                         [
                             [

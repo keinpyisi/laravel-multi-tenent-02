@@ -67,6 +67,8 @@ class LoginRequest extends FormRequest
             $session = $this->session();
             
             // Store authentication data
+            $token = $user->createToken(env('APP_NAME', 'Laravel'))->plainTextToken;
+            $session->put('bearer_token', $token);
             $session->put('tenant_user_id', $user->id);
             $session->put('tenant_auth', true);
             $session->put('tenant_user', $user->only(['id', 'login_id', 'tenant_id']));
@@ -90,6 +92,39 @@ class LoginRequest extends FormRequest
         ]);
     }
 
+    public function authenticate_front_tenant(): void
+    {
+        $this->ensureIsNotRateLimited();
+        if (Auth::guard('tenants_front')->attempt($this->only('login_id', 'password'), $this->boolean('remember'))) {
+            $user = Auth::guard('tenants_front')->user();
+            
+            $session = $this->session();
+            
+            // Store authentication data
+            $token = $user->createToken(env('APP_NAME', 'Laravel'))->plainTextToken;
+            $session->put('bearer_token', $token);
+            $session->put('front_tenant_user_id', $user->id);
+            $session->put('front_tenant_auth', true);
+            $session->put('front_tenant_user', $user->only(['id', 'login_id', 'tenant_id']));
+            
+            // Force save session
+            $session->save();
+
+            log_message('Authentication Success', [
+                'session_id' => $session->getId(),
+                'user_id' => $user->id,
+                'session_data' => $session->all()
+            ]);
+
+            RateLimiter::clear($this->throttleKey());
+            return;
+        }
+
+        RateLimiter::hit($this->throttleKey());
+        throw ValidationException::withMessages([
+            'login_id' => trans('auth.failed'),
+        ]);
+    }
 
 
     /**

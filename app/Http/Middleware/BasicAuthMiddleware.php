@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,9 +18,11 @@ class BasicAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-         // Basic Auth check
-        if (!$this->checkBasicAuth($request)) {
-            return response('Unauthorized', 401)->header('WWW-Authenticate', 'Basic realm="Restricted Area"');
+        if(env('BASIC_AUTH')==true){
+             // Basic Auth check
+            if (!$this->checkBasicAuth($request)) {
+                return response('Unauthorized', 401)->header('WWW-Authenticate', 'Basic realm="Restricted Area"');
+            }
         }
         return $next($request);
     }
@@ -55,8 +58,16 @@ class BasicAuthMiddleware
             foreach ($lines as $line) {
                 if (empty($line)) continue;
                 // Split the line into username and password hash
-                list($storedUsername, $storedPassword) = explode(':', $line, 2);
-
+                $line = trim($line); // Trim any leading/trailing spaces
+                //dd(explode(':', $line, 2));
+                if (strpos($line, ':') !== false) {
+                    list($storedUsername, $storedPassword) = explode(':', $line, 2);
+                } else {
+                    // Handle error or log the malformed line
+                    // Example: Log or throw an error if the line format is incorrect
+                    Log::error('Malformed authentication line: ' . $line);
+                    dd($line);
+                } 
                 // Check if username matches and password matches the hash
                 if ($username === $storedUsername && $this->verifyPassword($password, $storedPassword)) {
                     return true;
@@ -68,15 +79,25 @@ class BasicAuthMiddleware
     }
 
     private function verifyPassword($password, $storedPassword) {
-        // Check if the password matches the stored hash (for htpasswd)
-        // Laravel doesn't have a built-in method for htpasswd hash verification,
-        // so we use an external package or a custom solution to verify the password.
-
-        // For example, use an Apache htpasswd password hash verification method:
-        if (Hash::check($password, $storedPassword)) {
-            return true;
+       
+        // If the stored password is bcrypt (common in htpasswd), verify using Hash::check
+        if (strpos($storedPassword, '$2y$') === 0) {
+            // Bcrypt hash check
+            return Hash::check($password, $storedPassword);
         }
-
-        return false;
+    
+        // If the stored password uses crypt (e.g., $1$ for MD5-based hashing)
+        if (strpos($storedPassword, '$1$') === 0) {
+            // Use crypt function for MD5-based hashes (if you're using it)
+            return crypt($password, $storedPassword) === $storedPassword;
+        }
+    
+        // If the stored password is a plain text password (not hashed)
+        if (empty($storedPassword) || strpos($storedPassword, '$') === false) {
+            return $password === $storedPassword;
+        }
+    
+        return false;  // Default to false for unsupported hash formats
     }
+    
 }

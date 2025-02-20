@@ -18,6 +18,6 @@ class SchemaServiceProvider extends ServiceProvider {
      */
     public function boot(): void {
         //
-        DB::statement("SET search_path TO base_tenants, public");
+        DB::statement("SET search_path TO common, public");
     }
 }

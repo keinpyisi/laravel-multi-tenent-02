@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable {
     protected $connection = 'pgsql';
-    protected $table = 'base_tenants.users';
+    protected $table = 'common.users';
     use HasFactory, Notifiable,HasRoles;
 
     protected $fillable = [

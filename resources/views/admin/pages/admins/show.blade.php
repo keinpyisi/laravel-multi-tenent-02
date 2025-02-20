@@ -184,7 +184,7 @@
                 <label class="text-sm font-medium text-gray-700 mb-1">ホームページ</label>
                 <input type="url" 
                        name="url" 
-                       value="{{ $tenant->url }}" 
+                       value="{{ $tenant->homepage ?? '' }}" 
                        placeholder="https://www.example.com"
                        class="form-input rounded-md border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
             </div>

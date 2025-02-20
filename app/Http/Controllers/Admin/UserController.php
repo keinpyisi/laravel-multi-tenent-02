@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use App\Models\Base\Tenant;
-use App\Models\Tenant\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -57,7 +57,7 @@ class UserController extends Controller {
     }
 
     public function show(int $id) {
-        DB::statement("SET search_path TO base_tenants");
+        DB::statement("SET search_path TO common");
 
         $r = [
             "id" => $id,

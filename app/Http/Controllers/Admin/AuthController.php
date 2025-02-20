@@ -17,6 +17,11 @@ use App\Http\Requests\Auth\LoginRequest;
 class AuthController extends Controller {
     protected $redirectTo = 'backend/admin/login';
     public function showLoginForm() {
+        if(Auth::guard('web')->check()){
+            return redirect()->intended(route('admin.tenants.index', absolute: false));
+        }
+        // Forget the cookies
+        Auth::guard('web')->logout();
         return view('admin.auth.login');
     }
 
@@ -29,7 +34,7 @@ class AuthController extends Controller {
             ]);
 
             // Attempt login using user ID and password
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
           
             $request->authenticate();
 
@@ -42,7 +47,7 @@ class AuthController extends Controller {
             log_message('Error occurred during login : ', ['exception' => $ex->getMessage()]);
             return redirect()->intended(route('admin.users.login', absolute: false));
         } finally {
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
         }
     }
 

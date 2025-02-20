@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Tenant\Tenant;
-use App\Models\Tenant\MstUserAuth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -13,7 +12,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('login_id');
+            $table->string('login_id')->unique();
             $table->string('email')->unique()->nullable();
             $table->string('user_name');
             $table->string('password');

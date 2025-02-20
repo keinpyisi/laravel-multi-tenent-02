@@ -28,11 +28,10 @@ class SetTenantFromPath {
                 $this->authenticateTenantUser();
             } else if(count($segments) >= 2 && $segments[0] === 'frontend'){
                 $this->handleFrontendRoutes($request, $segments[1]);
+                $this->authenticateFrontTenantUser();
             }else {
                 $this->setPublicSchema($request);
             }
-
-           
 
             return $next($request);
         } catch (Exception $ex) {
@@ -61,8 +60,8 @@ class SetTenantFromPath {
         $request->merge(['tenant_name' => 'admin']);
 
         // Set the schema only if necessary
-        if (config('database.connections.tenant.search_path') !== 'base_tenants') {
-            DB::statement("SET search_path TO base_tenants");
+        if (config('database.connections.tenant.search_path') !== 'common') {
+            DB::statement("SET search_path TO common");
         }
 
         config(['logging.channels.tenant' => [
@@ -71,6 +70,10 @@ class SetTenantFromPath {
             'level' => 'debug',
             'days' => 14,
         ]]);
+
+        config([
+            'cache.stores.file.path' => storage_path('framework/cache/data'),
+        ]);
     }
 
     private function setTenantConfig(Request $request, $tenantSlug) {
@@ -78,7 +81,7 @@ class SetTenantFromPath {
         $tenant = Cache::remember("tenant:{$tenantSlug}", now()->addMinutes(10), function () use ($tenantSlug) {
             return Tenant::where('domain', $tenantSlug)->first(['id', 'database']);
         });
-
+        
         if (!$tenant) {
             abort(404, 'Tenant Not Found');
         }
@@ -103,6 +106,17 @@ class SetTenantFromPath {
                 'days' => 14,
             ],
         ]);
+
+        $tenantCachePath = storage_path("tenants/{$tenantSlug}/cache");
+        // Ensure the directory exists
+        if (!file_exists($tenantCachePath)) {
+            mkdir($tenantCachePath, 0777, true);
+        }
+
+        // Update the cache configuration dynamically
+        config([
+            'cache.stores.file.path' => $tenantCachePath,
+        ]);
     }
 
     private function setPublicSchema(Request $request) {
@@ -120,7 +134,7 @@ class SetTenantFromPath {
         if ($userId && !Auth::guard('tenants')->check()) {
             // Use cache to prevent frequent database lookups
             $user = Cache::remember("tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
-                return \App\Models\Tenant\User::find($userId, ['id', 'name', 'email']); // Load only required fields
+                return \App\Models\Tenant\Back\User::find($userId, ['id', 'user_name', 'email','login_id','remember_token']); // Load only required fields
             });
 
             if ($user) {
@@ -131,16 +145,16 @@ class SetTenantFromPath {
     }
 
     private function authenticateFrontTenantUser() {
-        $userId = session('tenant_user_id');
+        $userId = session('front_tenant_user_id');
 
-        if ($userId && !Auth::guard('tenants')->check()) {
+        if ($userId && !Auth::guard('tenants_front')->check()) {
             // Use cache to prevent frequent database lookups
             $user = Cache::remember("front_tenant_user:{$userId}", now()->addMinutes(10), function () use ($userId) {
-                return \App\Models\Tenant\User::find($userId, ['id', 'name', 'email']); // Load only required fields
+                return \App\Models\Tenant\Front\FrontUser::find($userId, ['id', 'user_name', 'email','login_id','remember_token']); // Load only required fields
             });
 
             if ($user) {
-                Auth::guard('tenants')->login($user);
+                Auth::guard('tenants_front')->login($user);
                 session()->save(); // Ensure session is updated
             }
         }

@@ -41,6 +41,12 @@ return [
             'driver' => 'local',
             'root' => storage_path('tenants'),  // Ensure this path is correct
             'url' => env('APP_URL') . '/storage',  // Optional: adjust URL to serve files if needed
+            'visibility' => 'private',  // Optional: adjust visibility depending on your needs
+        ],
+        'front_tenant' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/tenants'),  // Ensure this path is correct
+            'url' => env('APP_URL') . '/storage',  // Optional: adjust URL to serve files if needed
             'visibility' => 'public',  // Optional: adjust visibility depending on your needs
         ],
 

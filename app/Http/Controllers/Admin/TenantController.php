@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use App\Models\Base\Tenant;
-use App\Models\Tenant\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\Tenant\Back\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -73,7 +73,7 @@ class TenantController extends Controller {
             ]);
 
             // Handle file upload for logo
-            $data = $request->all();
+            $data = $request->except(['_token', '_method']);
             $this->createCustomFolder($data['domain']);
 
             if ($request->hasFile('logo')) {
@@ -99,6 +99,17 @@ class TenantController extends Controller {
                     } else {
                         log_message('Error uploading logo: No File');
                     }
+                    $frontlogoPath = $logo->storeAs($tenantLogoPath, $logoName, 'front_tenant');
+
+                    // Check if the file exists
+                    if (Storage::disk('front_tenant')->exists($frontlogoPath)) {
+                        // Get the full path
+                        $fullPath = Storage::disk('front_tenant')->path($frontlogoPath);
+                        log_message(['message' => 'File uploaded and exists', 'full_path' => $fullPath]);
+                    } else {
+                        log_message('Error uploading logo: No File');
+                    }
+                    
 
                     // Save the file path to the database or log it
                     $data['logo'] = $logoPath;
@@ -113,16 +124,36 @@ class TenantController extends Controller {
 
             // Add tenant unique key
             $data['tenent_unique_key'] = Str::uuid()->toString();  // Ensure spelling matches the database column
-
+            
             // Create the Tenant with the validated data
-            $tenant = Tenant::create($data);
+            //$tenant = Tenant::create($data);
+            $tenant = Tenant::create([
+                'client_name'=>$data['client_name'] ?? '',
+                'account_name'=>$data['account_name']?? '',
+                'domain'=>$data['domain']?? '',
+                'database'=>$data['database']?? '',
+                'kana'=>$data['kana']?? '',
+                'logo'=>$data['logo']?? '',
+                'genre'=>$data['genre']?? '',
+                'person_in_charge'=>$data['person_in_charge']?? '',
+                'tel'=>$data['tel']?? '',
+                'address'=>$data['address']?? '',
+                'post_code'=>$data['post_code']?? '',
+                'fax_number'=>$data['fax_number']?? '',
+                'e_mail'=>$data['e_mail']?? '',
+                'homepage'=>$data['homepage']?? '',
+                'support_mail'=>$data['support_mail']?? '',
+                'note'=>$data['note']?? '',
+                'tenent_unique_key'=>$data['tenent_unique_key']?? ''
+            ]);
+            
 
             // Handle schema creation and migrations
             $this->createSchema($data['database']);
             DB::statement("SET search_path TO {$data['database']}");
             $this->runTenantMigrations($data['database']);
 
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
 
             DB::commit();
 
@@ -130,7 +161,25 @@ class TenantController extends Controller {
 
             DB::statement("SET search_path TO {$data['database']}");
             $data['id'] = $tenant->id;
-            $tenant = Client_Tenant::create($data);
+            $tenant = Client_Tenant::create([
+                'client_name'=>$data['client_name'] ?? '',
+                'account_name'=>$data['account_name']?? '',
+                'domain'=>$data['domain']?? '',
+                'database'=>$data['database']?? '',
+                'kana'=>$data['kana']?? '',
+                'logo'=>$data['logo']?? '',
+                'genre'=>$data['genre']?? '',
+                'person_in_charge'=>$data['person_in_charge']?? '',
+                'tel'=>$data['tel']?? '',
+                'address'=>$data['address']?? '',
+                'post_code'=>$data['post_code']?? '',
+                'fax_number'=>$data['fax_number']?? '',
+                'e_mail'=>$data['e_mail']?? '',
+                'homepage'=>$data['homepage']?? '',
+                'support_mail'=>$data['support_mail']?? '',
+                'note'=>$data['note']?? '',
+                'tenent_unique_key'=>$data['tenent_unique_key']?? ''
+            ]);
             User::create([
                 'login_id' => $data['login_id'],
                 'user_name' => $data['login_id'],
@@ -138,22 +187,32 @@ class TenantController extends Controller {
                 'tenant_id' => $tenant->id,
 
             ]);
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
 
             DB::commit();
             $randomPassword = Str::random(8);
-            $hashedPassword = Hash::make($randomPassword);
+
+            // Generate a bcrypt hash of the password
+            $hashedPassword = password_hash($randomPassword, PASSWORD_BCRYPT);
+
             // Prepare the htpasswd line
             $htpasswdLine = "{$data['database']}:{$hashedPassword}";
+
+            // Define the path to the .htpasswd file
+            $htpasswdPath = '.htpasswd';
+
             // Check if the file exists
-            if (!Storage::disk('tenant')->exists('.htpasswd')) {
-                // If the file doesn't exist, create it
-                Storage::disk('tenant')->put('.htpasswd', $htpasswdLine . PHP_EOL);
+            if (!Storage::disk('tenant')->exists($htpasswdPath)) {
+                // If the file doesn't exist, create it with the new user data
+                Storage::disk('tenant')->put($htpasswdPath, $htpasswdLine);
             } else {
-                // If the file exists, append the new user data
-                Storage::disk('tenant')->append('.htpasswd', $htpasswdLine . PHP_EOL);
+                // If the file exists, append the new user data without a blank line
+                $existingContent = Storage::disk('tenant')->get($htpasswdPath);
+                $newContent = trim($existingContent) . PHP_EOL . $htpasswdLine;
+                Storage::disk('tenant')->put($htpasswdPath, $newContent);
             }
 
+            
             // Redirect to the tenant's index with success
             return redirect()->route('admin.tenants.index')->with(
                 'success',
@@ -173,14 +232,14 @@ class TenantController extends Controller {
                 'text' => __('lang.error', ['attribute' => $ex->getMessage()]),
             ]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 
 
     public function show(int $id) {
-        DB::statement("SET search_path TO base_tenants");
+        DB::statement("SET search_path TO common");
 
         $r = [
             "id" => $id,
@@ -216,7 +275,7 @@ class TenantController extends Controller {
 
         DB::statement("SET search_path TO {$tenant->database}");
         $users = User::where('tenant_id', $tenant->id)->paginate(100);
-        DB::statement("SET search_path TO base_tenants");
+        DB::statement("SET search_path TO common");
         // Specify the directory to calculate (e.g., storage directory)
         $directory = storage_path();  // You can change this to any directory you want to analyze
 
@@ -318,6 +377,16 @@ class TenantController extends Controller {
                     } else {
                         log_message('Error uploading logo: No File');
                     }
+                    $frontlogoPath = $logo->storeAs($tenantLogoPath, $logoName, 'front_tenant');
+
+                    // Check if the file exists
+                    if (Storage::disk('front_tenant')->exists($frontlogoPath)) {
+                        // Get the full path
+                        $fullPath = Storage::disk('front_tenant')->path($frontlogoPath);
+                        log_message(['message' => 'File uploaded and exists', 'full_path' => $fullPath]);
+                    } else {
+                        log_message('Error uploading logo: No File');
+                    }
 
                     // Save the file path to the database or log it
                     $validatedData['logo'] = $logoPath;
@@ -333,7 +402,7 @@ class TenantController extends Controller {
             DB::statement("SET search_path TO {$tenant->database}");
             $client_tenant = Client_Tenant::findOrFail($id);
             $client_tenant->update($validatedData);
-            DB::statement("SET search_path TO base_tenants");
+            DB::statement("SET search_path TO common");
             DB::commit();
 
             // Optionally, you can return a response or redirect
@@ -355,8 +424,8 @@ class TenantController extends Controller {
                 'text' => __('lang.error', ['attribute' => $ex->getMessage()]),
             ]);
         } finally {
-            // Always reset search path back to base_tenants in case of failure
-            DB::statement("SET search_path TO base_tenants");
+            // Always reset search path back to common in case of failure
+            DB::statement("SET search_path TO common");
         }
     }
 
@@ -370,12 +439,24 @@ class TenantController extends Controller {
 
             // Get the tenant's domain to remove associated files
             $tenantDomain = $tenant->domain;
-            $tenantLogoPath = 'tenants/' . $tenantDomain . '/logo';
 
-            // Delete the tenant's logo file if it exists
-            if (Storage::exists($tenantLogoPath)) {
-                Storage::delete($tenantLogoPath);
+            // Paths
+            $tenantLogPath = "{$tenantDomain}/logo"; // storage/tenants/{client_name}/log
+            $frontTenantLogoPath = "{$tenantDomain}/logo"; // storage/app/public/tenants/{client_name}/logo
+
+            // Delete log folder from tenant disk
+            if (Storage::disk('tenant')->exists($tenantLogPath)) {
+                Storage::disk('tenant')->deleteDirectory($tenantLogPath);
+                log_message("Deleted: storage/tenants/{$tenantDomain}/logo");
             }
+
+            // Delete logo folder from front_tenant disk
+            if (Storage::disk('front_tenant')->exists($frontTenantLogoPath)) {
+                Storage::disk('front_tenant')->deleteDirectory($frontTenantLogoPath);
+                log_message("Deleted: storage/app/public/tenants/{$tenantDomain}/logo");
+            }
+            // Remove the tenant's .htpasswd line
+            $this->removeHtpasswdLine($tenant->database);
 
             // Drop tenant-specific schema and database
             $this->dropSchema($tenant->database); // Make sure this method exists to handle schema drop
@@ -402,6 +483,40 @@ class TenantController extends Controller {
                 'title' => __('lang.error_title'),
                 'text' => __('lang.error', ['attribute' => $ex->getMessage()]),
             ]);
+        }
+    }
+
+    /**
+     * Remove the line from .htpasswd that starts with the given database
+     *
+     * @param string $database
+     */
+    private function removeHtpasswdLine($database)
+    {
+        $htpasswdPath = '.htpasswd';
+
+        // Check if the .htpasswd file exists
+        if (Storage::disk('tenant')->exists($htpasswdPath)) {
+            // Get the contents of the .htpasswd file
+            $existingContent = Storage::disk('tenant')->get($htpasswdPath);
+
+            // Split the content into lines
+            $lines = explode(PHP_EOL, $existingContent);
+
+            // Filter out the line starting with the database name
+            $lines = array_filter($lines, function ($line) use ($database) {
+                return strpos($line, "{$database}:") !== 0;
+            });
+
+            // Rebuild the file content without the deleted line and without extra blank lines
+            $newContent = implode(PHP_EOL, $lines);
+        // If the content is empty after modification, delete the file
+            if (empty($newContent)) {
+                Storage::disk('tenant')->delete($htpasswdPath);
+            } else {
+                // Write the new content back to the .htpasswd file
+                Storage::disk('tenant')->put($htpasswdPath, $newContent);
+            }
         }
     }
 
@@ -477,6 +592,7 @@ class TenantController extends Controller {
 
     private function createCustomFolder($domain) {
         $customFolder = tenant_path($domain);
+        $customFrontFolder = front_tenant_path($domain);
 
         // Create the main tenant folder if it doesn't exist
         if (!file_exists($customFolder)) {
@@ -490,16 +606,38 @@ class TenantController extends Controller {
             chmod($customFolder, 0775);
         }
 
+        // Create the main tenant folder if it doesn't exist
+        if (!file_exists($customFrontFolder)) {
+            mkdir($customFrontFolder, 0755, true);
+
+            // Create additional subdirectories if needed
+            mkdir(front_tenant_path($domain, 'files'), 0755, true);
+            mkdir(front_tenant_path($domain, 'cache'), 0755, true);
+
+            // Ensure the web server has write permissions
+            chmod($customFrontFolder, 0775);
+        }
+
         // Create a 'logo' subfolder inside the tenant folder
         $logoFolder = tenant_path($domain, 'logo');
         if (!file_exists($logoFolder)) {
             mkdir($logoFolder, 0755, true);
         }
+         // Create a 'logo' subfolder inside the tenant folder
+         $logoFolder = front_tenant_path($domain, 'logo');
+         if (!file_exists($logoFolder)) {
+             mkdir($logoFolder, 0755, true);
+         }
 
         // Create a .gitignore file to prevent tenant data from being committed
         $gitignorePath = storage_path('tenants/.gitignore');
         if (!file_exists($gitignorePath)) {
             file_put_contents($gitignorePath, "*\n!.gitignore\n");
         }
+         // Create a .gitignore file to prevent tenant data from being committed
+         $gitignorePath = storage_path('app/public/tenants/.gitignore');
+         if (!file_exists($gitignorePath)) {
+             file_put_contents($gitignorePath, "*\n!.gitignore\n");
+         }
     }
 }

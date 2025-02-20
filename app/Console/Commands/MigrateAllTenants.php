@@ -13,18 +13,18 @@ use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 class MigrateAllTenants extends Command
 {
     protected $signature = 'tenants:migrate {--fresh} {--seed}';
-    protected $description = 'Run migrations for base_tenants and all tenant schemas';
+    protected $description = 'Run migrations for common and all tenant schemas';
 
     public function handle()
     {
         
-        // Migrate base_tenants first
-        //$this->migrateSchema('base_tenants', 'database/migrations/base_tenants', 'BaseTenantsSeeder');
+        // Migrate common first
+        //$this->migrateSchema('common', 'database/migrations/common', 'BaseTenantsSeeder');
 
         // Then migrate all tenant schemas
         $this->migrateTenantSchemas();
 
-        $this->info("Migration completed for base_tenants and all tenant schemas.");
+        $this->info("Migration completed for common and all tenant schemas.");
     }
 
     private function migrateSchema($schema, $migrationPath, $seederClass = null)

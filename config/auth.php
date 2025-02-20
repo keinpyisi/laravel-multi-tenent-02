@@ -49,6 +49,10 @@ return [
             'driver' => 'session',
             'provider' => 'tenant_users',
         ],
+        'tenants_front' => [
+            'driver' => 'session',
+            'provider' => 'front_tenant_users',
+        ],
     ],
 
     /*
@@ -80,7 +84,12 @@ return [
 
         'tenant_users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Tenant\User::class,
+            'model' => App\Models\Tenant\Back\User::class,
+            'connection' => 'tenant',
+        ],
+        'front_tenant_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Tenant\Front\FrontUser::class,
             'connection' => 'tenant',
         ],
 

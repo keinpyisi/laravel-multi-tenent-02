@@ -142,27 +142,70 @@ php artisan migrate
 ```bash
 Route::prefix('backend/admin')->name('admin.')->middleware('set.tenant')
 ```
+Middlewareの名前と機能を話します。
+# Middleware 一覧
 
-ここの中に書くものは　認証が必要なルートです。
+| 名前  | 機能 |
+| ------------ | ------------ |
+| `web`  | ブラウザで表示する時に使います  |
+| `start.session`  | セッションをいじりたい時に使います  |
+| `basic.auth`  | Basic認証をするためのコード  |
+| `set.maitainence`  | メンテナンスモードのチェック  |
+| `set.tenant`  | 今のリクエストに対してのクライアントをセットする  |
+| `set.api.tenant`  | APIとAxiosのためのクライアントをセットする  |
+| `admin.auth`  | 管理者認証チェック  |
+| `tenent.auth`  | テナントユーザー認証チェック  |
+| `check.api.auth`  | APIでテナントユーザー認証チェック  |
+| `api`  | LaravelのAPIデフォルトMiddleware  |
 
-```bash
-Route::middleware(['admin.auth'])
-```
 
-参考：　 routes/tenents/tenant.php
+## フォルダー構成
+``bash
+/database/migrations/base
+``
+ここでは　管理画面のマイグレーションを書きます。
+``bash
+/database/migrations/tenant
+``
+ここでは　クライアントのマイグレーションを書きます。
 
-ここは　クライアント　テネットの Middleware です。必ずこちらも必要です。
 
-```bash
-Route::prefix('backend/{tenant}')
-    ->middleware('set.tenant')  // Middleware to load tenant
-```
+``bash
+/routes/admin
+``
+ここでは　管理画面のルートを書きます。
 
-これはクライアントで認証が必要なルートです。
+``bash
+/routes/tenents
+``
+ここでは　クライアントのルートを書きます。
 
-```bash
- Route::middleware(['tenent.auth'])
-```
+``bash
+/routes/tenents/Back
+``
+ここでは　クライアントのバックエンド側のルートを書きます。
+
+``bash
+/routes/tenents/Front
+``
+ここでは　クライアントのフロント側のルートを書きます。
+
+``bash
+/routes/api/admin
+``
+ここでは　管理者側のAPIやAxiosルートを書きます。
+
+``bash
+/routes/api/tenents/Back
+``
+ここでは　クライアント側のバックエンド側のAPIやAxiosルートを書きます。
+
+
+``bash
+/routes/api/tenents/Front
+``
+ここでは　クライアント側のフロント側のAPIやAxiosルートを書きます。
+
 
 ## Basic 認証
 

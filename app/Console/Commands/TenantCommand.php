@@ -16,7 +16,7 @@ class TenantCommand extends Command {
         $tenantSlug = $this->argument('tenant');
         $command = $this->argument('command');
 
-        DB::statement("SET search_path TO base_tenants");
+        DB::statement("SET search_path TO common");
         $tenant = Tenant::where('domain', $tenantSlug)->first();
 
         if (!$tenant) {
@@ -27,9 +27,9 @@ class TenantCommand extends Command {
         // Set the tenant in the app container
         app()->instance('tenant', $tenant);
 
-        // Set the database connection to use the tenant's schema and base_tenants
-        DB::statement("SET search_path TO {$tenant->database}, base_tenants, public");
-        config(['database.connections.tenant.search_path' => "{$tenant->database},base_tenants,public"]);
+        // Set the database connection to use the tenant's schema and common
+        DB::statement("SET search_path TO {$tenant->database}, common, public");
+        config(['database.connections.tenant.search_path' => "{$tenant->database},common,public"]);
         DB::purge('tenant');
         DB::reconnect('tenant');
 
